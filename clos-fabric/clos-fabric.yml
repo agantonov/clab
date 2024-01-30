@@ -1,0 +1,86 @@
+name: clos
+mgmt:
+  bridge: fabric-mgmt
+  ipv4-subnet: 172.20.20.0/24
+topology:
+  nodes:
+    leaf1:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      startup-config: leaf1-init.cfg
+      mgmt-ipv4: 172.20.20.21
+    leaf2:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      startup-config: leaf2-init.cfg
+      mgmt-ipv4: 172.20.20.22
+    leaf3:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      startup-config: leaf3-init.cfg
+      mgmt-ipv4: 172.20.20.23
+    leaf4:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      startup-config: leaf4-init.cfg
+      mgmt-ipv4: 172.20.20.24
+    spine1:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      startup-config: spine1-init.cfg
+      mgmt-ipv4: 172.20.20.25
+    spine2:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/vr-vjunosswitch:23.2R1.14
+      startup-config: spine2-init.cfg
+      mgmt-ipv4: 172.20.20.26
+    serv1:
+      kind: linux
+      image: ubuntu-host:0.02
+      mgmt-ipv4: 172.20.20.31
+      exec:
+        - sleep 5
+        - ip link set down dev eth1
+        - ip link set down dev eth2
+        - ip link add bond0 type bond mode 802.3ad
+        - ip link set eth1 master bond0
+        - ip link set eth2 master bond0
+        - ip link set up dev bond0
+        - ip link add link bond0 name bond0.100 type vlan id 100
+        - ip link add link bond0 name bond0.200 type vlan id 200
+        - ip address add 192.168.100.10/24 dev bond0.100
+        - ip address add 192.168.200.10/24 dev bond0.200
+        - ip link set up dev bond0.100
+        - ip link set up dev bond0.200
+    serv2:
+      kind: linux
+      image: ubuntu-host:0.02
+      mgmt-ipv4: 172.20.20.32
+      exec:
+        - sleep 5
+        - ip link set down dev eth1
+        - ip link set down dev eth2
+        - ip link add bond0 type bond mode 802.3ad
+        - ip link set eth1 master bond0
+        - ip link set eth2 master bond0
+        - ip link set up dev bond0
+        - ip link add link bond0 name bond0.100 type vlan id 100
+        - ip link add link bond0 name bond0.200 type vlan id 200
+        - ip address add 192.168.100.20/24 dev bond0.100
+        - ip address add 192.168.200.20/24 dev bond0.200
+        - ip link set up dev bond0.100
+        - ip link set up dev bond0.200
+
+  links:
+    - endpoints: ["leaf1:eth1", "spine1:eth1"]
+    - endpoints: ["leaf1:eth2", "spine2:eth1"]
+    - endpoints: ["leaf2:eth1", "spine1:eth2"]
+    - endpoints: ["leaf2:eth2", "spine2:eth2"]
+    - endpoints: ["leaf3:eth1", "spine1:eth3"]
+    - endpoints: ["leaf3:eth2", "spine2:eth3"]
+    - endpoints: ["leaf4:eth1", "spine1:eth4"]
+    - endpoints: ["leaf4:eth2", "spine2:eth4"]
+    - endpoints: ["serv1:eth1", "leaf1:eth3"]
+    - endpoints: ["serv1:eth2", "leaf2:eth3"]
+    - endpoints: ["serv2:eth1", "leaf3:eth3"]
+    - endpoints: ["serv2:eth2", "leaf4:eth3"]
